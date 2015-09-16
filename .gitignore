@@ -1,0 +1,40 @@
+# windows.gitignore
+Thumbs.db
+ehthumbs.db
+
+# Folder config file
+Desktop.ini
+
+# Recycle Bin used on file shares
+$RECYCLE.BIN/
+
+
+### OSX.gitignore
+
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+
+
+# Thumbnails
+._*
+
+# Files that might appear on external disk
+.Spotlight-V100
+.Trashes
+
+
+
+#original
+
+.sass-cache
+dest
+deploy
+pdf
+node_modules
+src/_temp
+src/_bower
+Gemfile.lock
+temp.jpeg
+aacgain
