@@ -3,10 +3,15 @@
   "version": "0.0.1",
   "private": "true",
   "dependencies": {
-    "av": "^0.4.4",
+    // "av": "^0.4.4",
+    // "crypto-js": "*",
+    // "express": "*",
+    // "mp3": "^0.1.0",
+    // "request": "^2.62.0"
+    "av": "*",
     "crypto-js": "*",
     "express": "*",
-    "mp3": "^0.1.0",
-    "request": "^2.62.0"
+    "mp3": "*",
+    "request": "*"
   }
 }
