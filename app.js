@@ -1,5 +1,5 @@
 //todo
-//raspberryでテスト
+//raspberryでテスト -> raspberryのnodeをアンインストール。nvmから0.10.33をインストール
 //alignment :: command + ctrl + a
 
 var fs       = require("fs");
