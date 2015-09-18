@@ -8,23 +8,17 @@ var express  = require('express');
 var CryptoJS = require('crypto-js');
 var app      = express();
 var url      = "http://192.168.11.6:1338";
+// var url      = "http://localhost:1338";
 var AV = require("av");
 require("mp3");
 var obj;
 
 
-var Speaker = require('speaker');
 
-// Create the Speaker instance
-var speaker = new Speaker({
-  channels: 2,          // 2 channels
-  bitDepth: 16,         // 16-bit samples
-  sampleRate: 44100     // 44,100 Hz sample rate
-});
-
-// PCM data from stdin gets piped into the speaker
-process.stdin.pipe(speaker);
-
+var AudioContext = require('web-audio-api').AudioContext;
+var context = new AudioContext();
+var source = context.createBufferSource();
+var audioBuffer = null;
 
 
 //サーバーにアクセスする。
@@ -45,18 +39,33 @@ function connectAndPlay(){
         for (var i = 0; i < u8.length; i++) {
             buffer.writeUInt8(u8[i], i);
         }
-
-        var player = new AV.Player.fromBuffer ( buffer );
-        player.play();
-        player.on('end', function() {
-            setTimeout(function() {
-                // player.startPlaying();
-                // player.seek(0);
-                // player.play();
-                console.log("play end");
-                nextPlay();
-            }, 5);
+        
+        context.decodeAudioData(buffer, function (buffer) {
+            // audioBuffer is global to reuse the decoded audio later.
+            console.log("success decode!");
+            audioBuffer = buffer;
+            
+            source.buffer = audioBuffer;
+            source.connect(context.destination);
+            source.start(0);
+            
+        }, function (e) {
+            console.log('Error decoding file', e);
         });
+        
+        
+
+        // var player = new AV.Player.fromBuffer ( buffer );
+        // player.play();
+        // player.on('end', function() {
+        //     setTimeout(function() {
+        //         // player.startPlaying();
+        //         // player.seek(0);
+        //         // player.play();
+        //         console.log("play end");
+        //         nextPlay();
+        //     }, 5);
+        // });
         // fs.writeFileSync("./audio.mp3", buffer);
         
       } else {
@@ -72,6 +81,70 @@ function nextPlay(){
 
 //起動時に接続開始
 connectAndPlay();
+
+
+
+
+
+// var Speaker = require('speaker');
+
+// // Create the Speaker instance
+// var speaker = new Speaker({
+//   channels: 2,          // 2 channels
+//   bitDepth: 16,         // 16-bit samples
+//   sampleRate: 44100     // 44,100 Hz sample rate
+// });
+
+// // PCM data from stdin gets piped into the speaker
+// process.stdin.pipe(speaker);
+
+
+
+// //サーバーにアクセスする。
+// function connectAndPlay(){
+//     request(url, function (error, response, body) {
+//       if (!error && response.statusCode == 200) {
+//         // console.log(JSON.parse(body));
+//         obj               = JSON.parse(body);
+//         var cipherParams  = CryptoJS.lib.CipherParams.create({
+//                 ciphertext : CryptoJS.enc.Base64.parse(obj.ct)
+//         });
+//         cipherParams.salt = CryptoJS.enc.Hex.parse(obj.s);
+//         cipherParams.iv   = CryptoJS.enc.Hex.parse(obj.iv);
+//         var decrypted     = CryptoJS.AES.decrypt(  cipherParams  , "password");
+//         var u8            = CryptoJS.enc.u8array.stringify(decrypted);
+        
+//         var buffer = new Buffer(u8.length);
+//         for (var i = 0; i < u8.length; i++) {
+//             buffer.writeUInt8(u8[i], i);
+//         }
+
+//         var player = new AV.Player.fromBuffer ( buffer );
+//         player.play();
+//         player.on('end', function() {
+//             setTimeout(function() {
+//                 // player.startPlaying();
+//                 // player.seek(0);
+//                 // player.play();
+//                 console.log("play end");
+//                 nextPlay();
+//             }, 5);
+//         });
+//         // fs.writeFileSync("./audio.mp3", buffer);
+        
+//       } else {
+//         console.log('request error: '+ response.statusCode);
+//       }
+//     })
+// }
+
+
+// function nextPlay(){
+//     connectAndPlay();
+// }
+
+// //起動時に接続開始
+// connectAndPlay();
 
 
 // CryptoJS.encを拡張
