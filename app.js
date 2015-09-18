@@ -7,95 +7,102 @@ var request  = require("request");
 var express  = require('express');
 var CryptoJS = require('crypto-js');
 var app      = express();
-var url      = "http://192.168.11.6:1338";
-// var url      = "http://localhost:1338";
+// var url      = "http://192.168.11.6:1338";
+var url      = "http://localhost:1338";
 var AV = require("av");
 require("mp3");
 var obj;
 
 
 
-var AudioContext = require('web-audio-api').AudioContext;
-var context = new AudioContext();
-var source = context.createBufferSource();
-var audioBuffer = null;
+var lame = require('lame')
+var Speaker = require('speaker');
+
+var stream = fs.createReadStream('audio.mp3')
+  , decoder = new lame.Decoder()
+  , speaker = new Speaker();
+
+// decoder.on('format', function() {
+//   mpg123Util.setVolume(decoder.mh, 0.5);
+//   var vol = mpg123Util.getVolume(decoder.mh);
+//   console.log(vol);
+// });
+
+stream.pipe(decoder).pipe(speaker);
 
 
-//サーバーにアクセスする。
-function connectAndPlay(){
-    request(url, function (error, response, body) {
-      if (!error && response.statusCode == 200) {
-        // console.log(JSON.parse(body));
-        obj               = JSON.parse(body);
-        var cipherParams  = CryptoJS.lib.CipherParams.create({
-                ciphertext : CryptoJS.enc.Base64.parse(obj.ct)
-        });
-        cipherParams.salt = CryptoJS.enc.Hex.parse(obj.s);
-        cipherParams.iv   = CryptoJS.enc.Hex.parse(obj.iv);
-        var decrypted     = CryptoJS.AES.decrypt(  cipherParams  , "password");
-        var u8            = CryptoJS.enc.u8array.stringify(decrypted);
+//---------------------------------------------
+// node-web-audio-apiでの再生 Macでは再生可能、raspberryでは再生だが処理不足な印象
+//---------------------------------------------
+// var AudioContext = require('web-audio-api').AudioContext;
+// var context = new AudioContext();
+// var source = context.createBufferSource();
+// var audioBuffer = null;
+
+
+// //サーバーにアクセスする。
+// function connectAndPlay(){
+//     request(url, function (error, response, body) {
+//       if (!error && response.statusCode == 200) {
+//         // console.log(JSON.parse(body));
+//         obj               = JSON.parse(body);
+//         var cipherParams  = CryptoJS.lib.CipherParams.create({
+//                 ciphertext : CryptoJS.enc.Base64.parse(obj.ct)
+//         });
+//         cipherParams.salt = CryptoJS.enc.Hex.parse(obj.s);
+//         cipherParams.iv   = CryptoJS.enc.Hex.parse(obj.iv);
+//         var decrypted     = CryptoJS.AES.decrypt(  cipherParams  , "password");
+//         var u8            = CryptoJS.enc.u8array.stringify(decrypted);
         
-        console.log("start Unit8Array to buffer");
+//         console.log("start Unit8Array to buffer");
         
-        var buffer = new Buffer(u8.length);
-        for (var i = 0; i < u8.length; i++) {
-            buffer.writeUInt8(u8[i], i);
-        }
+//         var buffer = new Buffer(u8.length);
+//         for (var i = 0; i < u8.length; i++) {
+//             buffer.writeUInt8(u8[i], i);
+//         }
         
-        obj = null;
-        cipherParams = null;
-        decrypted = null;
-        u8=null;
+//         obj = null;
+//         cipherParams = null;
+//         decrypted = null;
+//         u8=null;
         
-        console.log("start decodeAudioData from buffer");
+//         console.log("start decodeAudioData from buffer");
         
-        context.decodeAudioData(buffer, function (inbuff) {
-            // audioBuffer is global to reuse the decoded audio later.
-            console.log("success decode audio Data!");
+//         context.decodeAudioData(buffer, function (inbuff) {
+//             // audioBuffer is global to reuse the decoded audio later.
+//             console.log("success decode audio Data!");
             
-            source.buffer = inbuff;
-            source.connect(context.destination);
+//             source.buffer = inbuff;
+//             source.connect(context.destination);
             
-            console.log("play Sound");
-            source.start(0);
+//             console.log("play Sound");
+//             source.start(0);
             
-        }, function (e) {
-            console.log('Error decoding file', e);
-        });
+//         }, function (e) {
+//             console.log('Error decoding file', e);
+//         });
         
-        
-
-        // var player = new AV.Player.fromBuffer ( buffer );
-        // player.play();
-        // player.on('end', function() {
-        //     setTimeout(function() {
-        //         // player.startPlaying();
-        //         // player.seek(0);
-        //         // player.play();
-        //         console.log("play end");
-        //         nextPlay();
-        //     }, 5);
-        // });
-        // fs.writeFileSync("./audio.mp3", buffer);
-        
-      } else {
-        console.log('request error: '+ response.statusCode);
-      }
-    })
-}
+//       } else {
+//         console.log('request error: '+ response.statusCode);
+//       }
+//     })
+// }
 
 
-function nextPlay(){
-    connectAndPlay();
-}
+// function nextPlay(){
+//     connectAndPlay();
+// }
 
-//起動時に接続開始
-connectAndPlay();
+// //起動時に接続開始
+// connectAndPlay();
+//---------------------------------------------
 
 
 
 
-
+//---------------------------------------------
+// Aurora.jsでの再生 Macでは再生可能、raspberryでは再生不可 (npm install speaker --mpg123-backend=openal がビルドエラーとなる)
+//---------------------------------------------
 // var Speaker = require('speaker');
 
 // // Create the Speaker instance
@@ -155,6 +162,11 @@ connectAndPlay();
 
 // //起動時に接続開始
 // connectAndPlay();
+//---------------------------------------------
+
+
+
+
 
 
 // CryptoJS.encを拡張
