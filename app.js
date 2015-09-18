@@ -49,12 +49,11 @@ function connectAndPlay(){
         
         console.log("start decodeAudioData from buffer");
         
-        context.decodeAudioData(buffer, function (buffer) {
+        context.decodeAudioData(buffer, function (inbuff) {
             // audioBuffer is global to reuse the decoded audio later.
             console.log("success decode audio Data!");
-            audioBuffer = buffer;
             
-            source.buffer = audioBuffer;
+            source.buffer = inbuff;
             source.connect(context.destination);
             
             console.log("play Sound");
