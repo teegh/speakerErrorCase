@@ -12,23 +12,34 @@ var url      = "http://localhost:1338";
 var AV = require("av");
 require("mp3");
 var obj;
+var childProcess    = require('child_process');
 
 
+// var lame = require('lame')
+// var Speaker = require('speaker');
 
-var lame = require('lame')
-var Speaker = require('speaker');
+// var stream = fs.createReadStream('audio.mp3')
+//   , decoder = new lame.Decoder()
+//   , speaker = new Speaker();
 
-var stream = fs.createReadStream('audio.mp3')
-  , decoder = new lame.Decoder()
-  , speaker = new Speaker();
+// // decoder.on('format', function() {
+// //   mpg123Util.setVolume(decoder.mh, 0.5);
+// //   var vol = mpg123Util.getVolume(decoder.mh);
+// //   console.log(vol);
+// // });
 
-// decoder.on('format', function() {
-//   mpg123Util.setVolume(decoder.mh, 0.5);
-//   var vol = mpg123Util.getVolume(decoder.mh);
-//   console.log(vol);
-// });
+// stream.pipe(decoder).pipe(speaker);
 
-stream.pipe(decoder).pipe(speaker);
+
+childProcess.exec('mpg123 "' + "audio.mp3" + '"', done);
+
+function done(error, stdout, stderr)
+{
+    // currentTrack = undefined;
+    // if (playQueue.length > 0){
+    //     setTimeout(function(){ play(); }, 0);
+    // }
+}
 
 
 //---------------------------------------------
