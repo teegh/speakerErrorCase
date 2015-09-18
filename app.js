@@ -35,18 +35,29 @@ function connectAndPlay(){
         var decrypted     = CryptoJS.AES.decrypt(  cipherParams  , "password");
         var u8            = CryptoJS.enc.u8array.stringify(decrypted);
         
+        console.log("start Unit8Array to buffer");
+        
         var buffer = new Buffer(u8.length);
         for (var i = 0; i < u8.length; i++) {
             buffer.writeUInt8(u8[i], i);
         }
         
+        obj = null;
+        cipherParams = null;
+        decrypted = null;
+        u8=null;
+        
+        console.log("start decodeAudioData from buffer");
+        
         context.decodeAudioData(buffer, function (buffer) {
             // audioBuffer is global to reuse the decoded audio later.
-            console.log("success decode!");
+            console.log("success decode audio Data!");
             audioBuffer = buffer;
             
             source.buffer = audioBuffer;
             source.connect(context.destination);
+            
+            console.log("play Sound");
             source.start(0);
             
         }, function (e) {
