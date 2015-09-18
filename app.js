@@ -7,7 +7,7 @@ var request  = require("request");
 var express  = require('express');
 var CryptoJS = require('crypto-js');
 var app      = express();
-var url      = "http://localhost:1338";
+var url      = "http://192.168.11.6:1338";
 var AV = require("av");
 require("mp3");
 var obj;
