@@ -1,5 +1,7 @@
 //todo
-//raspberryでテスト -> raspberryのnodeをアンインストール。nvmから0.10.33をインストール
+//Aurora.jsでのmp3 buffer再生は処理能力不足となっている。
+//代替の方法として、fs.createReadStreamに復号バッファを入れて、再生する方法。
+// decryptされたbuffer(base64)がreadStreamに変換できるかが重要となる。
 //alignment :: command + ctrl + a
 
 var fs       = require("fs");
@@ -7,14 +9,22 @@ var request  = require("request");
 var express  = require('express');
 var CryptoJS = require('crypto-js');
 var app      = express();
-// var url      = "http://192.168.11.6:1338";
-var url      = "http://localhost:1338";
+var url      = "http://192.168.11.6:1338";
+// var url      = "http://localhost:1338";
 var AV = require("av");
 require("mp3");
 var obj;
 var childProcess    = require('child_process');
 
 
+
+
+
+
+
+//---------------------------------------------
+// 指定ファイルを開き、readStreamでデコードして随時再生
+//---------------------------------------------
 // var lame = require('lame')
 // var Speaker = require('speaker');
 
@@ -22,24 +32,81 @@ var childProcess    = require('child_process');
 //   , decoder = new lame.Decoder()
 //   , speaker = new Speaker();
 
-// // decoder.on('format', function() {
-// //   mpg123Util.setVolume(decoder.mh, 0.5);
-// //   var vol = mpg123Util.getVolume(decoder.mh);
-// //   console.log(vol);
-// // });
-
 // stream.pipe(decoder).pipe(speaker);
 
 
-childProcess.exec('mpg123 "' + "audio.mp3" + '"', done);
 
-function done(error, stdout, stderr)
-{
-    // currentTrack = undefined;
-    // if (playQueue.length > 0){
-    //     setTimeout(function(){ play(); }, 0);
-    // }
+
+//---------------------------------------------
+// 復号ファイルを、bufferとしてreadStreamに渡す。readStreamでデコードして随時再生
+//---------------------------------------------
+var es = require('event-stream');
+var myStream;
+
+var AudioContext = require('web-audio-api').AudioContext;
+var context = new AudioContext();
+var source = context.createBufferSource();
+var audioBuffer = null;
+
+
+var lame = require('lame')
+var Speaker = require('speaker');
+var decoder = new lame.Decoder()
+var speaker = new Speaker();
+
+var sbuff = require('simple-bufferstream')
+
+
+//サーバーにアクセスする。
+function connectAndPlay(){
+    request(url, function (error, response, body) {
+      if (!error && response.statusCode == 200) {
+        // console.log(JSON.parse(body));
+        obj               = JSON.parse(body);
+        var cipherParams  = CryptoJS.lib.CipherParams.create({
+                ciphertext : CryptoJS.enc.Base64.parse(obj.ct)
+        });
+        cipherParams.salt = CryptoJS.enc.Hex.parse(obj.s);
+        cipherParams.iv   = CryptoJS.enc.Hex.parse(obj.iv);
+        var decrypted     = CryptoJS.AES.decrypt(  cipherParams  , "password");
+        var u8            = CryptoJS.enc.u8array.stringify(decrypted);
+        
+        console.log("start Unit8Array to buffer");
+        
+        //unit8Array to buffer
+        var buffer = new Buffer(u8.length);
+        for (var i = 0; i < u8.length; i++) {
+            buffer.writeUInt8(u8[i], i);
+        }
+        
+        //unit8Array to array
+        // var arr = new Array(u8.length);
+        // for (var i = 0; i < u8.length; i++) {
+        //     arr[i] = u8[i];
+        // }
+        
+        
+        // sbuff(buffer).pipe(fs.createWriteStream('myoutput.dat'));
+        sbuff(buffer).pipe(decoder).pipe(speaker);
+        
+        // myStream = es.readArray(arr);
+        // myStream.pipe(decoder).pipe(speaker);
+        
+        
+    }
+    })
 }
+
+
+function nextPlay(){
+    connectAndPlay();
+}
+
+//起動時に接続開始
+connectAndPlay();
+
+
+
 
 
 //---------------------------------------------
