@@ -1,16 +1,11 @@
 {
-  "name": "client",
+  "name": "speakerErrorCase",
   "version": "0.0.1",
   "private": "true",
   "dependencies": {
-    "av": "^0.4.4",
     "crypto-js": "*",
-    "event-stream": "^3.3.1",
-    "express": "*",
     "lame": "^1.2.3",
-    "mp3": "^0.1.0",
     "request": "^2.62.0",
-    "speaker": "^0.2.5",
-    "web-audio-api": "^0.2.1"
+    "speaker": "^0.2.5"
   }
 }
