@@ -10,7 +10,6 @@
     "lame": "^1.2.3",
     "mp3": "^0.1.0",
     "request": "^2.62.0",
-    "simple-bufferstream": "^1.0.0",
     "speaker": "^0.2.5",
     "web-audio-api": "^0.2.1"
   }

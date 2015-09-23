@@ -1,7 +1,5 @@
 //todo
-//Aurora.jsでのmp3 buffer再生は処理能力不足となっている。
-//代替の方法として、fs.createReadStreamに復号バッファを入れて、再生する方法。
-// decryptされたbuffer(base64)がreadStreamに変換できるかが重要となる。
+
 //alignment :: command + ctrl + a
 
 var fs       = require("fs");
@@ -9,8 +7,8 @@ var request  = require("request");
 var express  = require('express');
 var CryptoJS = require('crypto-js');
 var app      = express();
-var url      = "http://192.168.11.6:1338";
-// var url      = "http://localhost:1338";
+// var url      = "http://192.168.11.6:1338";
+var url      = "http://localhost:1338";
 var AV = require("av");
 require("mp3");
 var obj;
@@ -44,24 +42,35 @@ var es = require('event-stream');
 var myStream;
 
 var AudioContext = require('web-audio-api').AudioContext;
-var context = new AudioContext();
-var source = context.createBufferSource();
-var audioBuffer = null;
+var context      = new AudioContext();
+var source       = context.createBufferSource();
+var audioBuffer  = null;
 
 
-var lame = require('lame')
+var lame    = require('lame');
 var Speaker = require('speaker');
-var decoder = new lame.Decoder()
+var decoder = new lame.Decoder();
 var speaker = new Speaker();
+// var sbuff = require('simple-bufferstream')
+var isConnecting = false;
 
-var sbuff = require('simple-bufferstream')
+
+var stream = require("stream");
+var bufferStreamV;
+
 
 
 //サーバーにアクセスする。
 function connectAndPlay(){
+    
+    console.log("-> 1. connect server");
+    isConnecting = true;
     request(url, function (error, response, body) {
+        
       if (!error && response.statusCode == 200) {
-        // console.log(JSON.parse(body));
+        
+        console.log("-> 2. get response from server (code=200)");
+        
         obj               = JSON.parse(body);
         var cipherParams  = CryptoJS.lib.CipherParams.create({
                 ciphertext : CryptoJS.enc.Base64.parse(obj.ct)
@@ -71,7 +80,7 @@ function connectAndPlay(){
         var decrypted     = CryptoJS.AES.decrypt(  cipherParams  , "password");
         var u8            = CryptoJS.enc.u8array.stringify(decrypted);
         
-        console.log("start Unit8Array to buffer");
+        console.log("-> 3. decrypted data");
         
         //unit8Array to buffer
         var buffer = new Buffer(u8.length);
@@ -79,22 +88,52 @@ function connectAndPlay(){
             buffer.writeUInt8(u8[i], i);
         }
         
+        console.log("-> 4. convert unit8Array to buffer , play");
+        
         //unit8Array to array
         // var arr = new Array(u8.length);
         // for (var i = 0; i < u8.length; i++) {
         //     arr[i] = u8[i];
         // }
+
+
+        bufferStreamV = null;
+        bufferStreamV = new stream.PassThrough();
+        decoder = null;
+        decoder = new lame.Decoder();
+        speaker = null;
+        speaker = new Speaker();
         
+        isConnecting = false;
+
+        // speaker.on("finish", function(){
+        //         console.log("finish");
+        //         nextPlay();
+        //     })
+
+        bufferStreamV.end( buffer );
+        bufferStreamV.pipe( decoder )
+            .on("error", function(){console.log("[decoder]error");} )
+            .on("close", function(){console.log("[decoder]close");} )
+            .on("unpipe", function(){console.log("[decoder]unpipe");} )
+            .on("end", function(){
+                console.log("[decoder]end");
+            })
+            .pipe(speaker)
+            // .on("error", function(){console.log("error");} )
+            // .on("close", function(){console.log("close");} )
+            // .on("unpipe", function(){console.log("unpipe");} )
+            // .on("end", function(){console.log("end");} )
+            .on("finish", function(){
+                console.log("finish");
+                nextPlay();
+            })
         
-        // sbuff(buffer).pipe(fs.createWriteStream('myoutput.dat'));
-        sbuff(buffer).pipe(decoder).pipe(speaker);
-        
-        // myStream = es.readArray(arr);
-        // myStream.pipe(decoder).pipe(speaker);
-        
-        
+    }else{
+        isConnecting = false;
+        console.log("Connect Error");
     }
-    })
+    });
 }
 
 
@@ -241,9 +280,6 @@ connectAndPlay();
 // //起動時に接続開始
 // connectAndPlay();
 //---------------------------------------------
-
-
-
 
 
 
