@@ -7,7 +7,7 @@ var decoder;
 var speaker;
 
 
-function connectAndPlay(){
+function musicPlay(){
 
     decoder = null;
     decoder = new lame.Decoder();
@@ -26,7 +26,7 @@ function connectAndPlay(){
 
 
 function nextPlay(){
-    connectAndPlay();
+    musicPlay();
 }
 
-connectAndPlay();
+musicPlay();
